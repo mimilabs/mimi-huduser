@@ -3,6 +3,13 @@ import pyspark.sql.functions as f
 
 # COMMAND ----------
 
+varmapper = {'tract': 'Census Tract',
+             'zip': 'ZIP',
+             'cbsa': 'CBSA',
+             'county': 'County'}
+
+# COMMAND ----------
+
 crosswalk_lst = [('tract', 'zip'),
                  ('zip', 'county'),
                  ('zip', 'cbsa')]
@@ -31,7 +38,8 @@ for crosswalk_pair in crosswalk_lst:
         .mode('overwrite')
         .option('mergeSchema', 'true')
         .saveAsTable(tablename_new))
-    spark.sql(f"""COMMENT ON TABLE {tablename_new} IS '# {geo_from} to {geo_to} crosswalk, many-to-one (mto) mapping based on the residential size\nThe dataset is created from `{tablename_org}` by taking the latest source file, and taking the maximum residential size mapping per `{geo_from}` (smaller geographic area between the two definitions). The original file has a many-to-many mapping, but this table will have a many-to-one mapping. In case of ties, we take a random selection between the ties.\n\n- The latest source file date: `{latest_src_date}`.\n- The size of the latest source: `{num_org}`.\n- After the many-to-one mapping: `{num_res1to1}`.';""")
+    spark.sql(f"""COMMENT ON TABLE {tablename_new} IS '# {varmapper[geo_from]} to {varmapper[geo_to]} crosswalk, many-to-one (mto) mapping based on the residential size, [mimi-derived data](https://mimilabs.ai) | resolution: {geo_from}, interval: latest\n\nThe dataset is created from `{tablename_org}` by taking the latest source file, and taking the maximum residential size mapping per `{geo_from}` (smaller geographic area between the two definitions). The original file has a many-to-many mapping, but this table will have a many-to-one mapping. In case of ties, we take a random selection between the ties.\n\n- The latest source file date: `{latest_src_date}`.\n- The size of the latest source: `{num_org}`.\n- After the many-to-one mapping: `{num_res1to1}`.';""")
+    
 
 # COMMAND ----------
 
@@ -63,7 +71,7 @@ for crosswalk_pair in crosswalk_lst:
         .mode('overwrite')
         .option('mergeSchema', 'true')
         .saveAsTable(tablename_new))
-    spark.sql(f"""COMMENT ON TABLE {tablename_new} IS '# {geo_from} to {geo_to} crosswalk, one-to-many (otm) mapping based on the residential size\nThe dataset is created from `{tablename_org}` by taking the latest source file, and taking the maximum residential size mapping per `{geo_to}` (smaller geographic area between the two definitions). The original file has a many-to-many mapping, but this table will have a one-to-many mapping. As a result, the mapping between `{geo_from}` to `{geo_to}` will be one to one. In case of ties, we take a random selection between the ties.\n\n- The latest source file date: `{latest_src_date}`.\n- The size of the latest source: `{num_org}`.\n- After the one-to-many mapping: `{num_res1to1}`.';""")
+    spark.sql(f"""COMMENT ON TABLE {tablename_new} IS '# {varmapper[geo_from]} to {varmapper[geo_to]} crosswalk, one-to-many (otm) mapping based on the residential size, [mimi-derived data](https://mimilabs.ai) | resolution: {geo_from}, interval: latest\nThe dataset is created from `{tablename_org}` by taking the latest source file, and taking the maximum residential size mapping per `{geo_to}` (smaller geographic area between the two definitions). The original file has a many-to-many mapping, but this table will have a one-to-many mapping. As a result, the mapping between `{geo_from}` to `{geo_to}` will be one to one. In case of ties, we take a random selection between the ties.\n\n- The latest source file date: `{latest_src_date}`.\n- The size of the latest source: `{num_org}`.\n- After the one-to-many mapping: `{num_res1to1}`.';""")
 
 # COMMAND ----------
 
